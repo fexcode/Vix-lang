@@ -39,6 +39,7 @@ typedef enum {
     AST_TYPE_STRING,
     AST_TYPE_VOID,
     AST_EXPRESSION_LIST,
+    AST_INDEX,
     AST_INPUT,
     AST_TOINT,
     AST_TOFLOAT,
@@ -89,6 +90,10 @@ typedef struct ASTNode {
             struct ASTNode** expressions;
             int expression_count;
         } expression_list;
+        struct {
+            struct ASTNode* target;
+            struct ASTNode* index;
+        } index;
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
@@ -221,6 +226,9 @@ ASTNode* create_return_node_with_yyltype(ASTNode* expr, void* yylloc);
 ASTNode* create_call_node(ASTNode* func, ASTNode* args);
 ASTNode* create_call_node_with_location(ASTNode* func, ASTNode* args, Location location);
 ASTNode* create_call_node_with_yyltype(ASTNode* func, ASTNode* args, void* yylloc);
+ASTNode* create_index_node(ASTNode* target, ASTNode* index);
+ASTNode* create_index_node_with_location(ASTNode* target, ASTNode* index, Location location);
+ASTNode* create_index_node_with_yyltype(ASTNode* target, ASTNode* index, void* yylloc);
 void free_ast(ASTNode* node);
 void print_ast(ASTNode* node, int indent);
 

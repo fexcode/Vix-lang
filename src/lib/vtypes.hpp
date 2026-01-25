@@ -6,7 +6,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
-
+#include <vector>
 namespace vtypes {
 
 class VString : public std::string {
@@ -63,7 +63,20 @@ public:
         return os;
     }
 };
-
-} 
-
+class VList {
+public:
+    std::vector<VString> items;
+    VList() : items() {}
+    VList(std::initializer_list<VString> init) : items(init) {}
+    size_t size() const { return items.size(); }
+    VString operator[](size_t i) const { return items.at(i); }
+    VString& operator[](size_t i) { return items.at(i); }
+    friend std::ostream& operator<<(std::ostream &os, const VList &l) {
+        os << "[";
+        for (size_t i = 0; i < l.items.size(); ++i) { if (i) os << ", "; os << l.items[i]; }
+        os << "]";
+        return os;
+    }
+};
+} // namespace vtypes
 #endif // VTYPES_HPP

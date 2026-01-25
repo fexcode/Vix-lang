@@ -31,7 +31,7 @@ ASTNode* root;
 %token ASSIGN PLUS_ASSIGN MINUS_ASSIGN MULTIPLY_ASSIGN DIVIDE_ASSIGN MODULO_ASSIGN
 %token PLUS MINUS MULTIPLY DIVIDE MODULO POWER
 %token EQ NE LT LE GT GE
-%token DOTDOT
+%token DOTDOT LBRACKET RBRACKET
 %token LPAREN RPAREN LBRACE RBRACE SEMICOLON COMMA
 %token ERROR
 
@@ -230,6 +230,11 @@ for_statement
         ASTNode* end   = $6;
         $$ = create_for_node_with_yyltype(var, start, end, $8, (YYLTYPE*) &@$);
     }
+    | FOR LPAREN identifier SEMICOLON expression RPAREN block_statement {//some foreach style
+        ASTNode* var = $3;
+        ASTNode* iterable = $5;
+        $$ = create_for_node_with_yyltype(var, iterable, NULL, $7, (YYLTYPE*) &@$);
+    }
     ;
 
 expression_list
@@ -286,6 +291,7 @@ factor_unary
         ASTNode* id = create_identifier_node_with_yyltype($1, (YYLTYPE*) &@$); 
         $$ = create_call_node_with_yyltype(id, $3, (YYLTYPE*) &@$); 
     }
+    | factor_unary LBRACKET expression RBRACKET { $$ = create_index_node_with_yyltype($1, $3, (YYLTYPE*) &@$); }
     | literal                       { $$ = $1; }
     | identifier                    { $$ = $1; }
     | toint_expression              { $$ = $1; }
@@ -300,6 +306,8 @@ literal
     : NUMBER_INT                    { $$ = create_num_int_node_with_yyltype($1, (YYLTYPE*) &@$); }
     | NUMBER_FLOAT                  { $$ = create_num_float_node_with_yyltype($1, (YYLTYPE*) &@$); }
     | STRING                        { $$ = create_string_node_with_yyltype($1, (YYLTYPE*) &@$); }
+    | LBRACKET RBRACKET             { $$ = create_expression_list_node_with_yyltype((YYLTYPE*) &@$); }
+    | LBRACKET expression_list RBRACKET { $$ = $2; }
     ;
 
 identifier

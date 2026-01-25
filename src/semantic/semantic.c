@@ -229,6 +229,11 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
             }
             break;
         }
+        case AST_INDEX: {
+            errors_found += check_undefined_symbols_in_node_with_visited(node->data.index.target, table, new_visited_list);
+            errors_found += check_undefined_symbols_in_node_with_visited(node->data.index.index, table, new_visited_list);
+            break;
+        }
         
         case AST_BINOP:
         case AST_UNARYOP: {
@@ -240,6 +245,7 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
             }
             break;
         }
+        
         
         case AST_IF: {
             errors_found += check_undefined_symbols_in_node_with_visited(node->data.if_stmt.condition, table, new_visited_list);
@@ -441,6 +447,9 @@ int is_variable_used_in_node(ASTNode* node, const char* var_name) {
                 }
             }
             break;
+        }
+        case AST_INDEX: {
+            return is_variable_used_in_node(node->data.index.target, var_name) || is_variable_used_in_node(node->data.index.index, var_name);
         }
         
         case AST_NUM_INT:
@@ -684,6 +693,11 @@ int check_unused_variables_with_usage(ASTNode* node, SymbolTable* table, Variabl
             for (int i = 0; i < node->data.expression_list.expression_count; i++) {
                 warnings_found += check_unused_variables_with_usage(node->data.expression_list.expressions[i], table, usage_list);
             }
+            break;
+        }
+        case AST_INDEX: {
+            if (node->data.index.target) warnings_found += check_unused_variables_with_usage(node->data.index.target, table, usage_list);
+            if (node->data.index.index) warnings_found += check_unused_variables_with_usage(node->data.index.index, table, usage_list);
             break;
         }
         

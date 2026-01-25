@@ -104,6 +104,8 @@ char* my_strndup(const char* str, size_t n) {
 ")"                 { UPDATE_COLUMN(); return RPAREN; }
 "{"                 { UPDATE_COLUMN(); return LBRACE; }
 "}"                 { UPDATE_COLUMN(); return RBRACE; }
+"["                 { UPDATE_COLUMN(); return LBRACKET; }
+"]"                 { UPDATE_COLUMN(); return RBRACKET; }
 
 ";"                 { UPDATE_COLUMN(); return SEMICOLON; }
 ","                 { UPDATE_COLUMN(); return COMMA; }

@@ -404,6 +404,35 @@ ASTNode* create_call_node_with_yyltype(ASTNode* func, ASTNode* args, void* yyllo
     node->data.call.args = args;
     return node;
 }
+ASTNode* create_index_node_with_location(ASTNode* target, ASTNode* index, Location location) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_INDEX;
+    node->location = location;
+    node->data.index.target = target;
+    node->data.index.index = index;
+    return node;
+}
+
+ASTNode* create_index_node(ASTNode* target, ASTNode* index) {
+    Location loc = {
+        target->location.first_line,
+        target->location.first_column,
+        index->location.last_line,
+        index->location.last_column
+    };
+    return create_index_node_with_location(target, index, loc);
+}
+
+ASTNode* create_index_node_with_yyltype(ASTNode* target, ASTNode* index, void* yylloc) {
+    YYLTYPE* loc = (YYLTYPE*)yylloc;
+    Location location = {
+        loc->first_line,
+        loc->first_column,
+        loc->last_line,
+        loc->last_column
+    };
+    return create_index_node_with_location(target, index, location);
+}
 ASTNode* create_toint_node_with_yyltype(ASTNode* expr, void* yylloc) {
     YYLTYPE* loc = (YYLTYPE*)yylloc;
     Location location = {
@@ -689,6 +718,10 @@ void free_ast(ASTNode* node) {
             free_ast(node->data.for_stmt.end);
             free_ast(node->data.for_stmt.body);
             break;
+        case AST_INDEX:
+            free_ast(node->data.index.target);
+            free_ast(node->data.index.index);
+            break;
             
         case AST_FUNCTION:
             free(node->data.function.name);
@@ -715,6 +748,7 @@ void free_ast(ASTNode* node) {
                 free_ast(node->data.return_stmt.expr);
             }
             break;
+
             
         case AST_NUM_INT:
         case AST_NUM_FLOAT:
@@ -773,6 +807,11 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->data.for_stmt.start, indent + 1);
             print_ast(node->data.for_stmt.end, indent + 1);
             print_ast(node->data.for_stmt.body, indent + 1);
+            break;
+        case AST_INDEX:
+            printf("Index:\n");
+            print_ast(node->data.index.target, indent + 1);
+            print_ast(node->data.index.index, indent + 1);
             break;
         case AST_BREAK:
             printf("Break\n");

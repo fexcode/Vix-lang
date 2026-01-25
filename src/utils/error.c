@@ -30,8 +30,11 @@ void set_location_with_column(const char* filename, int line, int column) {
     current_column = column > 0 ? column : 1;
 }
 void load_source_file(const char* filename) {
-    if (!filename) return;
-    
+    if (!filename) {
+        printf("error:cannot open file\n");
+        return;
+    }
+
     FILE* file = fopen(filename, "r");
     if (!file) return;
     fseek(file, 0, SEEK_END);

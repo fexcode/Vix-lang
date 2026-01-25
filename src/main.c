@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
     int generate_vic_ir = 0;
     int generate_llvm_ir = 0;
     int optimize_vic_ir = 0;
-    int print_all = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0) {
             if (i + 1 < argc) {
@@ -65,7 +64,7 @@ int main(int argc, char **argv) {
             }
         }
         else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0 || strcmp(argv[i] , "-ver") == 0){
-            printf("Vix-lang Compiler 0.1.0_rc_indev (Beta_26.01.01) \n");
+            printf("Vix-lang Compiler 0.1.0_rc_indev (Beta_26.01.01) by:Mincx1203 Copyright(c) 2025-2026\n");
             return 0;
         }
         else if (strcmp(argv[i], "-ir") == 0) {
@@ -100,13 +99,9 @@ int main(int argc, char **argv) {
             optimize_vic_ir = 1;
         } else if (strcmp(argv[i], "-kt") == 0) {
             keep_cpp_file = 1;
-        } else if (strcmp(argv[i], "-all") == 0) {
-            print_all = 1;
-        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+        }else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             fprintf(stderr, "usage: %s <input.vix> [-o output_file]\n", argv[0]);
             fprintf(stderr, "       %s <input.vix> [-o output_file] [-kt]\n", argv[0]);
-            fprintf(stderr, "       %s <input.vix> -q <qbe_ir_file>\n", argv[0]);
-            fprintf(stderr, "       %s <input.vix> -run\n", argv[0]);
             fprintf(stderr, "       %s <input.vix> -q <qbe_ir_file>\n", argv[0]);
             fprintf(stderr, "       %s <input.vix> -ir <vic_ir_file> [-opt]\n", argv[0]);
             fprintf(stderr, "       %s <input.vix> -llvm <llvm_ir_file>\n", argv[0]);
@@ -114,7 +109,7 @@ int main(int argc, char **argv) {
             return 0;
         } else if (argv[i][0] == '-') {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
-            fprintf(stderr, "Usage: %s <input.vix> [-o output_file] [-kt] [-q qbe_file] [-ir vic_file -opt] [-llvm llvm_file] [-ll llvm_file] [-all]\n", argv[0]);
+            fprintf(stderr, "Usage: %s <input.vix> [-o output_file] [-kt] [-q qbe_file] [-ir vic_file -opt] [-llvm llvm_file] [-ll llvm_file]\n", argv[0]);
             return 1;
         } else {
             is_vbtc_file = strlen(argv[i]) > 5 && strcmp(argv[i] + strlen(argv[i]) - 5, ".vbtc") == 0;
@@ -373,25 +368,7 @@ int main(int argc, char **argv) {
             compile_ast_to_cpp_with_types(gen, type_ctx, root, output_file);
             free_type_inference_context(type_ctx);
             fclose(output_file);
-        } else if (print_all) {
-            printf("AST:\n");
-            print_ast(root, 0);
-            printf("\nVIC IR:\n");
-            vic_gen(root, stdout);
-            printf("\nLLVM IR:\n");
-            FILE* temp_vic = fopen("temp.vic", "w");
-            if (temp_vic) {
-                vic_gen(root, temp_vic);
-                fclose(temp_vic);
-                
-                FILE* temp_vic_read = fopen("temp.vic", "r");
-                if (temp_vic_read) {
-                    llvm_emit_from_vic_fp(temp_vic_read, stdout);
-                    fclose(temp_vic_read);
-                }
-            }
-            remove("temp.vic");
-        } else {
+        }else {
             printf("===========================AST=======================\n");
             print_ast(root, 0);
             printf("\n=========================VIC IR====================\n");
@@ -448,7 +425,6 @@ void analyze_ast(TypeInferenceContext* ctx, ASTNode* node) {
             analyze_ast(ctx, node->data.assign.right);
             break;
         case AST_CONST:
-            /* Treat const like an assign for type inference: record its type */
             infer_type(ctx, node->data.assign.right);
             if (node->data.assign.left->type == AST_IDENTIFIER) {
                 set_variable_type(ctx, node->data.assign.left->data.identifier.name,
@@ -590,6 +566,7 @@ void create_lib_files() {
         fprintf(vtypes_file, "#ifndef VTYPES_HPP\n");
         fprintf(vtypes_file, "#define VTYPES_HPP\n");
         fprintf(vtypes_file, "#include <string>\n");
+        fprintf(vtypes_file, "#include <vector>\n");
         fprintf(vtypes_file, "#include <iostream>\n");
         fprintf(vtypes_file, "#include <stdexcept>\n\n");
         fprintf(vtypes_file, "namespace vtypes {\n\n");
@@ -636,8 +613,23 @@ void create_lib_files() {
         fprintf(vtypes_file, "    friend std::ostream& operator<<(std::ostream &os, const VString &s) {\n");
         fprintf(vtypes_file, "        os << static_cast<const std::string&>(s);\n");
         fprintf(vtypes_file, "        return os;\n");
-        fprintf(vtypes_file, "    }\n");  // <-- 这里的分号位置要调整
-        fprintf(vtypes_file, "};\n\n");    // <-- 这里是类定义结束的分号
+        fprintf(vtypes_file, "    }\n");
+        fprintf(vtypes_file, "};\n\n");
+        fprintf(vtypes_file, "class VList {\n");
+        fprintf(vtypes_file, "public:\n");
+        fprintf(vtypes_file, "    std::vector<VString> items;\n");
+        fprintf(vtypes_file, "    VList() : items() {}\n");
+        fprintf(vtypes_file, "    VList(std::initializer_list<VString> init) : items(init) {}\n");
+        fprintf(vtypes_file, "    size_t size() const { return items.size(); }\n");
+        fprintf(vtypes_file, "    VString operator[](size_t i) const { return items.at(i); }\n");
+        fprintf(vtypes_file, "    VString& operator[](size_t i) { return items.at(i); }\n");
+        fprintf(vtypes_file, "    friend std::ostream& operator<<(std::ostream &os, const VList &l) {\n");
+        fprintf(vtypes_file, "        os << \"[\";\n");
+        fprintf(vtypes_file, "        for (size_t i = 0; i < l.items.size(); ++i) { if (i) os << \", \"; os << l.items[i]; }\n");
+        fprintf(vtypes_file, "        os << \"]\";\n");
+        fprintf(vtypes_file, "        return os;\n");
+        fprintf(vtypes_file, "    }\n");
+        fprintf(vtypes_file, "};\n\n");
         fprintf(vtypes_file, "} // namespace vtypes\n\n");
         fprintf(vtypes_file, "#endif\n");
         fclose(vtypes_file);

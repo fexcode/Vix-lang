@@ -24,23 +24,7 @@ static void emit_expression(FILE* out, ASTNode* node) {
             fprintf(out, "%f", node->data.num_float.value);
             break;
         case AST_STRING:
-            fprintf(out, "vtypes::VString(\"%s\")", node->data.string.value);
-            break;
-        case AST_IDENTIFIER:
-            fprintf(out, "%s", node->data.identifier.name);
-            break;
-        case AST_TOINT:
-            fprintf(out, "to_int(");
-            emit_expression(out, node->data.toint.expr);
-            fprintf(out, ")");
-            break;
-        case AST_TOFLOAT:
-            fprintf(out, "to_double(");
-            emit_expression(out, node->data.tofloat.expr);
-            fprintf(out, ")");
-            break;
-        case AST_INPUT:
-            fprintf(out, "/*input*/");
+            fprintf(out, "\"%s\"", node->data.string.value);
             break;
         case AST_UNARYOP:
             if (node->data.unaryop.op == OP_MINUS) {
@@ -96,11 +80,34 @@ static void emit_expression(FILE* out, ASTNode* node) {
             fprintf(out, ")");
             break;
         }
+        case AST_IDENTIFIER: {
+            fprintf(out, "%s", node->data.identifier.name);
+            break;
+        }
         case AST_EXPRESSION_LIST: {
+            fprintf(out, "vtypes::VList{ ");
             for (int i = 0; i < node->data.expression_list.expression_count; i++) {
                 if (i) fprintf(out, ", ");
-                emit_expression(out, node->data.expression_list.expressions[i]);
+                ASTNode* elem = node->data.expression_list.expressions[i];
+                if (elem->type == AST_STRING) {
+                    fprintf(out, "vtypes::VString(\"%s\")", elem->data.string.value);
+                } else {
+                    fprintf(out, "vconvert::to_vstring(");
+                    emit_expression(out, elem);
+                    fprintf(out, ")");
+                }
             }
+            fprintf(out, " }");
+            break;
+        }
+        case AST_INDEX: {
+            /* index from 0-based */
+            /* emit target.items.at((size_t)index) */
+            fprintf(out, "(");
+            emit_expression(out, node->data.index.target);
+            fprintf(out, ").items.at((size_t)(");
+            emit_expression(out, node->data.index.index);
+            fprintf(out, "))");
             break;
         }
         default:
@@ -340,6 +347,16 @@ static void compile_for(ByteCodeGen* gen, TypeInferenceContext* ctx, FILE* out, 
     if (var_index >= 0 && var_index < MAX_VARS) {
         decl[var_index] = 1;
     }
+    /* foreach: if end == null iterate by index from 0..start.items.size()-1 */
+    if (node->data.for_stmt.end == NULL) {
+        fprintf(out, "    for (long long %s = 0; %s < (long long)(", loop_var_name, loop_var_name);
+        emit_expression(out, node->data.for_stmt.start);
+        fprintf(out, ").items.size(); %s++) {\n", loop_var_name);
+        compile_node(gen, ctx, out, decl, node->data.for_stmt.body);
+        fprintf(out, "    }\n");
+        return;
+    }
+
     if (node->data.for_stmt.start &&
         node->data.for_stmt.start->type == AST_IDENTIFIER &&
         strcmp(node->data.for_stmt.start->data.identifier.name, "char") == 0 &&
