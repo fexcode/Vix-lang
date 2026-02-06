@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Full generator state structure (exposed so helper modules may access
-   struct/type registry). Keep layout in-sync with src/qbe-ir/ir.c */
 typedef struct QbeGenState {
 	FILE* output;
 	int reg_counter;

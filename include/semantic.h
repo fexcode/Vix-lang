@@ -31,13 +31,8 @@ int check_undefined_symbols(ASTNode* node);
 int check_undefined_symbols_in_node(ASTNode* node, SymbolTable* table);
 int check_unused_variables(ASTNode* node, SymbolTable* table);
 int is_variable_used_in_node(ASTNode* node, const char* var_name);
-
-// 声明VariableUsage结构（前向声明）
 struct VariableUsage;
-
 int check_unused_variables_with_usage(ASTNode* node, SymbolTable* table, struct VariableUsage** usage_list);
-
-// 添加缺少的函数声明
 void report_undefined_identifier_with_location_and_column(const char* identifier, const char* filename, int line, int column);
 void report_undefined_function_with_location_and_column(const char* identifier, const char* filename, int line, int column);
 
