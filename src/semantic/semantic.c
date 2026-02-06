@@ -4,6 +4,25 @@
 #include <stdlib.h>
 #include <string.h>
 extern const char* current_input_filename;
+typedef struct VisitedNode {
+    ASTNode* node;
+    struct VisitedNode* next;
+} VisitedNode;
+
+static int is_node_struct_field_assignment(ASTNode* node, VisitedNode* visited_list);
+static int is_node_struct_field_assignment(ASTNode* node, VisitedNode* visited_list) {
+    (void)node;
+    
+    VisitedNode* current = visited_list;
+    while (current) {
+        if (current->node && current->node->type == AST_STRUCT_DEF) {
+            return 1;
+        }
+        current = current->next;
+    }
+    return 0;
+}
+
 typedef struct StructDef {
     char* name;
     ASTNode* fields;
@@ -223,10 +242,6 @@ void destroy_symbol_table(SymbolTable* symbol_table) {
     
     free(symbol_table);
 }
-typedef struct VisitedNode {
-    ASTNode* node;
-    struct VisitedNode* next;
-} VisitedNode;
 
 static int is_node_visited(ASTNode* node, VisitedNode* visited_list) {
     VisitedNode* current = visited_list;
@@ -300,6 +315,7 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
         }
         
         case AST_ASSIGN: {
+            // 处理解引用赋值的不可变性检查
             if (node->data.assign.left && 
                 node->data.assign.left->type == AST_UNARYOP && 
                 node->data.assign.left->data.unaryop.op == OP_DEREF) {
@@ -315,8 +331,8 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
                     errors_found++;
                 }
             }
-            
-            errors_found += check_undefined_symbols_in_node_with_visited(node->data.assign.right, table, new_visited_list);
+
+            // 检查左值（left-hand side）
             if (node->data.assign.left && node->data.assign.left->type == AST_IDENTIFIER) {
                 Symbol* existing = lookup_symbol(table, node->data.assign.left->data.identifier.name);
                 if (existing && existing->type == SYMBOL_CONSTANT) {
@@ -327,7 +343,6 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
                     report_semantic_error_with_location(buf, filename, line);
                     errors_found++;
                 } else {
-                    // 检查是否是可变指针声明
                     int is_mutable = (node->data.assign.left->mutability == MUTABILITY_MUTABLE);
                     add_symbol_with_mutability(table, node->data.assign.left->data.identifier.name, SYMBOL_VARIABLE, TYPE_UNKNOWN, is_mutable);
                     if (node->data.assign.right && node->data.assign.right->type == AST_STRUCT_LITERAL &&
@@ -336,6 +351,25 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
                         const char* sname = node->data.assign.right->data.struct_literal.type_name->data.identifier.name;
                         add_var_struct_mapping(node->data.assign.left->data.identifier.name, sname);
                     }
+                }
+            }
+            if (node->data.assign.right) {
+                if (is_node_struct_field_assignment(node, new_visited_list)) {
+                    if (node->data.assign.right->type == AST_IDENTIFIER) {
+                        const char* type_name = node->data.assign.right->data.identifier.name;
+                        StructDef* struct_def = find_struct_definition(type_name);
+                        if (!struct_def) {
+                            const char* filename = current_input_filename ? current_input_filename : "unknown";
+                            int line = (node->data.assign.right->location.first_line > 0) ? node->data.assign.right->location.first_line : 1;
+                            int column = (node->data.assign.right->location.first_column > 0) ? node->data.assign.right->location.first_column : 1;
+                            report_undefined_identifier_with_location_and_column(type_name, filename, line, column);
+                            errors_found++;
+                        }
+                    } else {
+                        errors_found += check_undefined_symbols_in_node_with_visited(node->data.assign.right, table, new_visited_list);
+                    }
+                } else {
+                    errors_found += check_undefined_symbols_in_node_with_visited(node->data.assign.right, table, new_visited_list);
                 }
             }
             break;

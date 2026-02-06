@@ -1256,8 +1256,7 @@ void print_ast(ASTNode* node, int indent) {
             if (node->data.struct_def.fields) print_ast(node->data.struct_def.fields, indent + 1);
             break;
         case AST_STRUCT_LITERAL:
-            printf("StructLiteral:\n");
-            if (node->data.struct_literal.type_name) print_ast(node->data.struct_literal.type_name, indent + 1);
+            printf("StructLiteral: type %s\n", node->data.struct_literal.type_name ? node->data.struct_literal.type_name->data.identifier.name : "unknown");
             if (node->data.struct_literal.fields) print_ast(node->data.struct_literal.fields, indent + 1);
             break;
         case AST_RETURN:

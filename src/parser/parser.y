@@ -169,6 +169,9 @@ type
     | AMPERSAND TYPE_F32 { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_F64 { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_STR { $$ = create_type_node(AST_TYPE_POINTER); }
+    | IDENTIFIER {
+        $$ = create_identifier_node_with_yyltype($1, (YYLTYPE*) &@$); 
+    }
     ;
 
 param_list
