@@ -29,7 +29,7 @@ ASTNode* root;
 %token <num_float> NUMBER_FLOAT
 %token PRINT INPUT TOINT TOFLOAT TYPE_I32 TYPE_I64 TYPE_F32 TYPE_F64 TYPE_STR TYPE_PTR FN ARROW RETURN TYPE_VOID
 %token AT AMPERSAND
-%token IF ELSE ELIF WHILE FOR BREAK CONTINUE
+%token IF ELSE ELIF WHILE FOR BREAK CONTINUE IN
 %token ASSIGN PLUS_ASSIGN MINUS_ASSIGN MULTIPLY_ASSIGN DIVIDE_ASSIGN MODULO_ASSIGN
 %token PLUS MINUS MULTIPLY DIVIDE MODULO POWER
 %token EQ NE LT LE GT GE
@@ -317,6 +317,11 @@ while_statement
 
 for_statement
     : FOR LPAREN identifier SEMICOLON term DOTDOT term RPAREN block_statement {
+        ASTNode* start = $5;
+        ASTNode* end = $7;
+        $$ = create_for_node_with_yyltype($3, start, end, $9, (YYLTYPE*) &@$);
+    }
+    | FOR LPAREN identifier IN term DOTDOT term RPAREN block_statement {
         ASTNode* start = $5;
         ASTNode* end = $7;
         $$ = create_for_node_with_yyltype($3, start, end, $9, (YYLTYPE*) &@$);

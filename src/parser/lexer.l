@@ -82,6 +82,7 @@ char* my_strndup(const char* str, size_t n) {
 "break"             { UPDATE_COLUMN(); yylval.str = strdup(yytext); return BREAK; }
 "continue"          { UPDATE_COLUMN(); yylval.str = strdup(yytext); return CONTINUE; }
 "for"               { UPDATE_COLUMN(); yylval.str = strdup(yytext); return FOR; }
+"in"                { UPDATE_COLUMN(); yylval.str = strdup(yytext); return IN; }
 
 "struct"           { UPDATE_COLUMN(); yylval.str = strdup(yytext); return STRUCT; }
 

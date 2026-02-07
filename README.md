@@ -3,6 +3,8 @@
 
 - Vix是一种轻量级的编译型脚本语言，旨在提供接近原生 C++ 的执行速度，同时保持脚本语言的简洁性和易用性。
 
+- 我的邮箱：[popolk1871@outlook.com](mailto:popolk1871@outlook.com)
+
 ## Why Vix?
 
 - 🚀 接近C++的性能：通过编译为高效本地代码实现
