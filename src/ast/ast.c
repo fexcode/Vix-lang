@@ -90,6 +90,29 @@ ASTNode* create_tofloat_node(ASTNode* expr) {
     return create_tofloat_node_with_location(expr, expr->location);
 }
 
+ASTNode* create_nil_node_with_location(Location location) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_NIL;
+    node->location = location;
+    return node;
+}
+
+ASTNode* create_nil_node() {
+    Location loc = {1, 1, 1, 1};
+    return create_nil_node_with_location(loc);
+}
+
+ASTNode* create_nil_node_with_yyltype(void* yylloc) {
+    YYLTYPE* loc = (YYLTYPE*)yylloc;
+    Location location = {
+        loc->first_line,
+        loc->first_column,
+        loc->last_line,
+        loc->last_column
+    };
+    return create_nil_node_with_location(location);
+}
+
 ASTNode* create_expression_list_node_with_location(Location location) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = AST_EXPRESSION_LIST;
@@ -1039,6 +1062,7 @@ void free_ast(ASTNode* node) {
             
         case AST_TYPE_INT32:
         case AST_TYPE_INT64:
+        case AST_TYPE_INT8:  // 添加对AST_TYPE_INT8类型的处理
         case AST_TYPE_FLOAT32:
         case AST_TYPE_FLOAT64:
         case AST_TYPE_STRING:
@@ -1117,6 +1141,7 @@ void free_ast(ASTNode* node) {
             
         case AST_NUM_INT:
         case AST_NUM_FLOAT:
+        case AST_NIL:  // 添加对nil节点的处理
         case AST_BREAK:
         case AST_CONTINUE:
             break;
@@ -1224,6 +1249,9 @@ void print_ast(ASTNode* node, int indent) {
         case AST_NUM_FLOAT:
             printf("Float: %g\n", node->data.num_float.value);
             break;
+        case AST_NIL:
+            printf("Nil\n");
+            break;
         case AST_STRING:
             printf("String: \"%s\"\n", node->data.string.value);
             break;
@@ -1245,7 +1273,6 @@ void print_ast(ASTNode* node, int indent) {
         case AST_EXPRESSION_LIST:
             printf("Expression List:\n");
             for (int i = 0; i < node->data.expression_list.expression_count; i++) {
-                // Check if this is an annotated parameter (assign node with identifier and type)
                 if (node->data.expression_list.expressions[i]->type == AST_ASSIGN &&
                     node->data.expression_list.expressions[i]->data.assign.left->type == AST_IDENTIFIER &&
                     (node->data.expression_list.expressions[i]->data.assign.right->type == AST_TYPE_INT32 ||
@@ -1254,7 +1281,6 @@ void print_ast(ASTNode* node, int indent) {
                      node->data.expression_list.expressions[i]->data.assign.right->type == AST_TYPE_FLOAT64 ||
                      node->data.expression_list.expressions[i]->data.assign.right->type == AST_TYPE_STRING ||
                      node->data.expression_list.expressions[i]->data.assign.right->type == AST_TYPE_VOID)) {
-                    // Print as annotated parameter
                     for (int j = 0; j < indent + 1; j++) printf("  ");
                     printf("Annotated Parameter: %s : ", 
                            node->data.expression_list.expressions[i]->data.assign.left->data.identifier.name);
@@ -1262,6 +1288,7 @@ void print_ast(ASTNode* node, int indent) {
                     switch(node->data.expression_list.expressions[i]->data.assign.right->type) {
                         case AST_TYPE_INT32: printf("i32\n"); break;
                         case AST_TYPE_INT64: printf("i64\n"); break;
+                        case AST_TYPE_INT8: printf("i8\n"); break;
                         case AST_TYPE_FLOAT32: printf("f32\n"); break;
                         case AST_TYPE_FLOAT64: printf("f64\n"); break;
                         case AST_TYPE_STRING: printf("string\n"); break;
@@ -1297,6 +1324,7 @@ void print_ast(ASTNode* node, int indent) {
                 switch(node->data.list_type.element_type->type) {
                     case AST_TYPE_INT32: printf("i32"); break;
                     case AST_TYPE_INT64: printf("i64"); break;
+                    case AST_TYPE_INT8: printf("i8"); break;  // 添加对AST_TYPE_INT8的支持
                     case AST_TYPE_FLOAT32: printf("f32"); break;
                     case AST_TYPE_FLOAT64: printf("f64"); break;
                     case AST_TYPE_STRING: printf("string"); break;

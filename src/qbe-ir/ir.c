@@ -1085,21 +1085,11 @@ void ir_gen(ASTNode* ast, FILE* fp) {
 }
 const char* infer_node_qbe_type(QbeGenState* state, ASTNode* node) {
     switch (node->type) {
+        case AST_NIL:
+            return "l";
+            
         case AST_NUM_INT:
             return "w";
-        case AST_NUM_FLOAT:
-            return "d";
-        case AST_STRING:
-            return "l";
-        case AST_IDENTIFIER: {
-            const char* var_name = node->data.identifier.name;
-            const char* type = find_var_type(state, var_name);
-            
-            if (type) {
-                return type;
-            }
-            return "w";//默认
-        }
         case AST_UNARYOP:
             if (node->data.unaryop.op == OP_ADDRESS) {
                 return "l";//地址用l类型表示
@@ -1192,6 +1182,12 @@ int is_float_expr(ASTNode* node) {
 }
 int gen_expr(QbeGenState* state, ASTNode* node) {
     switch (node->type) {
+        case AST_NIL: {
+            int reg = next_reg(state);
+            fprintf(state->output, "    %%r%d =l copy 0\n", reg);
+            return reg;
+        }
+        
         case AST_NUM_INT: {
             int reg = next_reg(state);
             fprintf(state->output, "    %%r%d =w copy %lld\n", reg, node->data.num_int.value);

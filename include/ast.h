@@ -34,6 +34,7 @@ typedef enum {
     AST_IDENTIFIER,
     AST_TYPE_INT32,
     AST_TYPE_INT64,
+    AST_TYPE_INT8,
     AST_TYPE_FLOAT32,
     AST_TYPE_FLOAT64,
     AST_TYPE_STRING,
@@ -56,6 +57,7 @@ typedef enum {
     AST_CALL
     , AST_STRUCT_DEF
     , AST_STRUCT_LITERAL
+    , AST_NIL
 } NodeType;
 
 typedef enum {
@@ -228,6 +230,9 @@ ASTNode* create_num_float_node_with_yyltype(double value, void* yylloc);
 ASTNode* create_string_node(const char* value);
 ASTNode* create_string_node_with_location(const char* value, Location location);
 ASTNode* create_string_node_with_yyltype(const char* value, void* yylloc);
+ASTNode* create_nil_node();
+ASTNode* create_nil_node_with_location(Location location);
+ASTNode* create_nil_node_with_yyltype(void* yylloc);
 ASTNode* create_identifier_node(const char* name);
 ASTNode* create_identifier_node_with_location(const char* name, Location location);
 ASTNode* create_identifier_node_with_yyltype(const char* name, void* yylloc);

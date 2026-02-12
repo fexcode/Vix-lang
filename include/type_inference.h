@@ -14,7 +14,8 @@ typedef enum {
     TYPE_STRING,
     TYPE_LIST,
     TYPE_POINTER, //指针类型
-    TYPE_STRUCT//结构体类型
+    TYPE_STRUCT,//结构体类型
+    TYPE_INT8
 } InferredType;
 typedef struct {
     char* name;// 字段名称

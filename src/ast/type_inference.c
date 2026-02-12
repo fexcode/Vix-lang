@@ -480,6 +480,8 @@ const char* type_to_cpp_string(InferredType type) {
             return "void*";
         case TYPE_STRUCT:
             return "struct";
+        case TYPE_INT8:
+            return "char";
         default:
             return "auto"; 
     }

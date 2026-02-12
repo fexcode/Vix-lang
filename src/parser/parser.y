@@ -24,10 +24,10 @@ ASTNode* root;
 
 %token <str> IDENTIFIER STRING
 %token STRUCT COLON
-%token CONST MUT  // 添加MUT关键字
+%token CONST MUT
 %token <num_int> NUMBER_INT
 %token <num_float> NUMBER_FLOAT
-%token PRINT INPUT TOINT TOFLOAT TYPE_I32 TYPE_I64 TYPE_F32 TYPE_F64 TYPE_STR TYPE_PTR FN ARROW RETURN TYPE_VOID
+%token PRINT INPUT TOINT TOFLOAT TYPE_I32 TYPE_I64 TYPE_I8 TYPE_F32 TYPE_F64 TYPE_STR TYPE_PTR FN ARROW RETURN TYPE_VOID NIL
 %token AT AMPERSAND
 %token IF ELSE ELIF WHILE FOR BREAK CONTINUE IN
 %token ASSIGN PLUS_ASSIGN MINUS_ASSIGN MULTIPLY_ASSIGN DIVIDE_ASSIGN MODULO_ASSIGN
@@ -103,6 +103,10 @@ statement
     | print_statement               { $$ = $1; }
     | assignment_statement          { $$ = $1; }
     | lvalue ASSIGN expression { $$ = create_assign_node_with_yyltype($1, $3, (YYLTYPE*) &@$); }
+    | identifier COLON expression { $$ = create_assign_node_with_yyltype($1, $3, (YYLTYPE*) &@$); }
+    | identifier COLON type ASSIGN expression { 
+        $$ = create_assign_node_with_yyltype($1, $5, (YYLTYPE*) &@$); 
+    }
     | compound_assignment_statement { $$ = $1; }
     | input_statement               { $$ = $1; }
     | function_definition           { $$ = $1; }
@@ -159,6 +163,7 @@ struct_init_fields
 type
     : TYPE_I32 { $$ = create_type_node(AST_TYPE_INT32); }
     | TYPE_I64 { $$ = create_type_node(AST_TYPE_INT64); }
+    | TYPE_I8 { $$ = create_type_node(AST_TYPE_INT8); }
     | TYPE_F32 { $$ = create_type_node(AST_TYPE_FLOAT32); }
     | TYPE_F64 { $$ = create_type_node(AST_TYPE_FLOAT64); }
     | TYPE_STR { $$ = create_type_node(AST_TYPE_STRING); }
@@ -166,9 +171,11 @@ type
     | TYPE_PTR LPAREN type RPAREN { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_I32 { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_I64 { $$ = create_type_node(AST_TYPE_POINTER); }
+    | AMPERSAND TYPE_I8 { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_F32 { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_F64 { $$ = create_type_node(AST_TYPE_POINTER); }
     | AMPERSAND TYPE_STR { $$ = create_type_node(AST_TYPE_POINTER); }
+    | AMPERSAND IDENTIFIER { $$ = create_type_node(AST_TYPE_POINTER); }
     | LBRACKET type RBRACKET { $$ = create_list_type_node($2); }
     | IDENTIFIER {
         $$ = create_identifier_node_with_yyltype($1, (YYLTYPE*) &@$); 
@@ -437,6 +444,7 @@ literal
     : NUMBER_INT                    { $$ = create_num_int_node_with_yyltype($1, (YYLTYPE*) &@$); }
     | NUMBER_FLOAT                  { $$ = create_num_float_node_with_yyltype($1, (YYLTYPE*) &@$); }
     | STRING                        { $$ = create_string_node_with_yyltype($1, (YYLTYPE*) &@$); }
+    | NIL                           { $$ = create_nil_node_with_yyltype((YYLTYPE*) &@$); }
     | LBRACKET RBRACKET             { $$ = create_expression_list_node_with_yyltype((YYLTYPE*) &@$); }
     | LBRACKET expression_list RBRACKET { $$ = $2; }
     ;
