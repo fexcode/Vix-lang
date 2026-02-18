@@ -178,8 +178,141 @@ feat(parser): 添加对指针解引用的支持
 - 添加 @ 操作符的语法解析
 - 实现解引用的 AST 节点
 - 添加相关的语义检查
-创建拉取请求
-``` 
+```
+
+## 创建拉取请求
+
+### Fork 仓库
+
+1. 访问 Vix 语言的 GitHub 仓库：https://github.com/Daweidie/vix-lang.git
+   或 Gitee 仓库：https://gitee.com/Mulang_zty/Vix-lang.git
+
+2. 点击页面右上角的 "Fork" 按钮，将仓库 fork 到你自己的 GitHub/Gitee 账号下
+
+### 克隆仓库
+
+```bash
+# 克隆你 fork 的仓库
+# GitHub
+git clone https://github.com/你的用户名/vix-lang.git
+cd vix-lang
+
+# 或 Gitee
+git clone https://gitee.com/你的用户名/Vix-lang.git
+cd Vix-lang
+```
+
+### 添加上游仓库
+
+```bash
+# 添加原始仓库为上游仓库
+# GitHub
+git remote add upstream https://github.com/Daweidie/vix-lang.git
+
+# 或 Gitee
+git remote add upstream https://gitee.com/Mulang_zty/Vix-lang.git
+
+# 验证远程仓库
+git remote -v
+```
+
+### 创建新分支
+
+```bash
+# 确保你在主分支上
+git checkout main
+
+# 拉取最新的上游代码
+git pull upstream main
+
+# 创建并切换到新分支
+git checkout -b feature/你的功能名称
+# 或
+git checkout -b fix/你要修复的问题
+```
+
+### 进行更改
+
+```bash
+# 进行你的代码更改
+# ...
+
+# 查看更改状态
+git status
+
+# 添加更改的文件
+git add .
+
+# 提交更改
+git commit -m "feat(模块): 简短描述"
+```
+
+### 推送到你的仓库
+
+```bash
+# 推送你的分支到你的 fork 仓库
+git push origin feature/你的功能名称
+```
+
+### 创建 Pull Request
+
+1. 访问你 fork 的仓库页面
+2. 点击 "New Pull Request" 按钮
+3. 确保你的分支与上游仓库的主分支进行比较
+4. 填写 PR 标题和描述：
+   - 标题应简明扼要，遵循提交信息格式
+   - 描述应详细说明你的更改，包括：
+     - 更改的目的
+     - 实现的方法
+     - 相关的 issue（如果有）
+     - 测试情况
+     - 截图（如果适用）
+5. 提交 Pull Request
+
+### 保持分支更新
+
+```bash
+# 切换到主分支
+git checkout main
+
+# 拉取上游最新代码
+git pull upstream main
+
+# 切换回你的功能分支
+git checkout feature/你的功能名称
+
+# 合并主分支的更改到你的功能分支
+git merge main
+
+# 解决可能的冲突
+# ...
+
+# 推送更新后的分支
+git push origin feature/你的功能名称
+```
+
+### 代码审查
+
+1. 关注 PR 的评论和反馈
+2. 根据维护者的建议进行修改
+3. 推送更新后的代码
+4. 等待 PR 被合并
+
+### PR 合并后
+
+```bash
+# 切换到主分支
+git checkout main
+
+# 拉取最新的上游代码
+git pull upstream main
+
+# 删除已合并的功能分支
+git branch -d feature/你的功能名称
+
+# 删除远程分支
+git push origin --delete feature/你的功能名称
+```
 
 ## 报告问题
 
