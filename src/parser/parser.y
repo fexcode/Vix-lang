@@ -50,14 +50,12 @@ ASTNode* root;
 %type <node> type param_list function_definition lvalue
 %type <node> print_statement assignment_statement compound_assignment_statement
 %type <node> input_statement if_statement while_statement for_statement
-%type <node> expression logical_expression comparison_expression term factor power factor_unary comparison
+%type <node> expression logical_expression comparison_expression term factor power factor_unary
 %type <node> literal identifier toint_expression tofloat_expression input_expression
 %type <node> block_statement if_rest expression_list
 
 %nonassoc IF
 %nonassoc ELSE
-%nonassoc WHILE
-%nonassoc FOR
 
 %start program
 
@@ -451,15 +449,6 @@ expression
     : logical_expression                    { $$ = $1; }
     | expression PLUS logical_expression    { $$ = create_binop_node_with_yyltype(OP_ADD, $1, $3, (YYLTYPE*) &@$); }
     | expression MINUS logical_expression   { $$ = create_binop_node_with_yyltype(OP_SUB, $1, $3, (YYLTYPE*) &@$); }
-    ;
-
-comparison
-    : term EQ term                  { $$ = create_binop_node_with_yyltype(OP_EQ, $1, $3, (YYLTYPE*) &@$); }
-    | term NE term                  { $$ = create_binop_node_with_yyltype(OP_NE, $1, $3, (YYLTYPE*) &@$); }
-    | term LT term                  { $$ = create_binop_node_with_yyltype(OP_LT, $1, $3, (YYLTYPE*) &@$); }
-    | term LE term                  { $$ = create_binop_node_with_yyltype(OP_LE, $1, $3, (YYLTYPE*) &@$); }
-    | term GT term                  { $$ = create_binop_node_with_yyltype(OP_GT, $1, $3, (YYLTYPE*) &@$); }
-    | term GE term                  { $$ = create_binop_node_with_yyltype(OP_GE, $1, $3, (YYLTYPE*) &@$); }
     ;
 
 term

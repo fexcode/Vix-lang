@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "-opt") == 0) {
             do_opt = 1;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0 || strcmp(argv[i] , "-ver") == 0){
-            printf("Vix-lang Compiler 0.1.0_rc_indev (Beta_26.01.01) by:Mincx1203 Copyright(c) 2025-2026\n");
+            printf("Vix Compiler 0.1.0_rc1_2 (Beta_26.01.01) by:Mincx1203 Copyright(c) 2025-2026\n");
             return 0;
         } else if (strcmp(argv[i], "-ir") == 0) {
             if (i + 1 < argc) {
