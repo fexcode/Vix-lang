@@ -1,4 +1,4 @@
-fn sort(nums:[i32],size:i32)
+pub fn sort(nums:[i32],size:i32)
 {
     for(i in 0 .. size - 1)
     {

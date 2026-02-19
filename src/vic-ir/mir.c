@@ -838,7 +838,6 @@ void vic_gen(ASTNode* ast, FILE* fp) {
     
     fprintf(fp, "    ret 0\n");
     fprintf(fp, "}\n");
-    
     free_constant_pool(pool);
 }
 //\o/\o/\o/\o/\o/\o/

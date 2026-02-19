@@ -136,6 +136,8 @@ char* process_escape_sequences(const char* input, size_t input_len) {
 "struct"           { UPDATE_COLUMN(); yylval.str = strdup(yytext); return STRUCT; }
 "and"              { UPDATE_COLUMN(); yylval.str = strdup(yytext); return AND; }
 "or"               { UPDATE_COLUMN(); yylval.str = strdup(yytext); return OR; }
+"import"           { UPDATE_COLUMN(); yylval.str = strdup(yytext); return IMPORT; }
+"pub"               { UPDATE_COLUMN(); yylval.str = strdup(yytext); return PUB; }
 
 "="                 { UPDATE_COLUMN(); return ASSIGN; }
 "+="                { UPDATE_COLUMN(); return PLUS_ASSIGN; }

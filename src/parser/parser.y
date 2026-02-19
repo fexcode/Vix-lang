@@ -25,6 +25,7 @@ ASTNode* root;
 %token <str> IDENTIFIER STRING CHAR_LITERAL
 %token STRUCT COLON
 %token CONST MUT GLOBAL
+%token IMPORT PUB
 %token <num_int> NUMBER_INT
 %token <num_float> NUMBER_FLOAT
 %token PRINT INPUT TOINT TOFLOAT TYPE_I32 TYPE_I64 TYPE_I8 TYPE_F32 TYPE_F64 TYPE_STR TYPE_PTR FN ARROW RETURN TYPE_VOID NIL EXTERN DOTDOTDOT
@@ -47,12 +48,13 @@ ASTNode* root;
 %type <node> program statement_list statement 
 %type <node> extern_block extern_decl extern_decl_list
 %type <node> struct_fields struct_field struct_init_fields struct_init_field
-%type <node> type param_list function_definition lvalue
+%type <node> type param_list function_definition pub_function_definition
 %type <node> print_statement assignment_statement compound_assignment_statement
 %type <node> input_statement if_statement while_statement for_statement
 %type <node> expression logical_expression comparison_expression term factor power factor_unary
 %type <node> literal identifier toint_expression tofloat_expression input_expression
 %type <node> block_statement if_rest expression_list
+%type <node> lvalue
 
 %nonassoc IF
 %nonassoc ELSE
@@ -100,6 +102,8 @@ statement
         $$ = create_assign_node_with_yyltype($2, $6, (YYLTYPE*) &@$); 
         $2->mutability = MUTABILITY_MUTABLE;
     }
+    | IMPORT STRING SEMICOLON { $$ = create_import_node_with_yyltype($2, (YYLTYPE*) &@$); }
+    | IMPORT STRING { $$ = create_import_node_with_yyltype($2, (YYLTYPE*) &@$); }
     | CONST identifier ASSIGN expression SEMICOLON { $$ = create_const_node_with_yyltype($2, $4, (YYLTYPE*) &@$); }
     | GLOBAL identifier ASSIGN expression SEMICOLON { $$ = create_global_node_with_yyltype($2, NULL, $4, (YYLTYPE*) &@$); }
     | GLOBAL identifier COLON type ASSIGN expression SEMICOLON { $$ = create_global_node_with_yyltype($2, $4, $6, (YYLTYPE*) &@$); }
@@ -117,6 +121,7 @@ statement
     }
     | compound_assignment_statement { $$ = $1; }
     | input_statement               { $$ = $1; }
+    | pub_function_definition           { $$ = $1; }
     | function_definition           { $$ = $1; }
     | extern_block                 { $$ = $1; }
     | STRUCT IDENTIFIER LBRACE struct_fields RBRACE { $$ = create_struct_def_node_with_yyltype($2, $4, (YYLTYPE*) &@$); }
@@ -238,20 +243,41 @@ param_list
     }
     ;
 
+pub_function_definition
+    : PUB FN IDENTIFIER LPAREN RPAREN ARROW type LBRACE statement_list RBRACE {
+        $$ = create_public_function_node($3, NULL, $7, $9);
+    }
+    | PUB FN IDENTIFIER LPAREN param_list RPAREN ARROW type LBRACE statement_list RBRACE {
+        $$ = create_public_function_node($3, $5, $8, $10);
+    }
+    | PUB FN IDENTIFIER LPAREN RPAREN LBRACE statement_list RBRACE {
+        ASTNode* void_type = create_type_node(AST_TYPE_VOID);
+        $$ = create_public_function_node($3, NULL, void_type, $7);
+    }
+    | PUB FN IDENTIFIER LPAREN param_list RPAREN LBRACE statement_list RBRACE {
+        ASTNode* void_type = create_type_node(AST_TYPE_VOID);
+        $$ = create_public_function_node($3, $5, void_type, $8);
+    }
+    ;
+
 function_definition
     : FN IDENTIFIER LPAREN RPAREN ARROW type LBRACE statement_list RBRACE {
         $$ = create_function_node($2, NULL, $6, $8);
+        $$->data.function.is_public = 0;
     }
     | FN IDENTIFIER LPAREN param_list RPAREN ARROW type LBRACE statement_list RBRACE {
         $$ = create_function_node($2, $4, $7, $9);
+        $$->data.function.is_public = 0;
     }
     | FN IDENTIFIER LPAREN RPAREN LBRACE statement_list RBRACE {
         ASTNode* void_type = create_type_node(AST_TYPE_VOID);
         $$ = create_function_node($2, NULL, void_type, $6);
+        $$->data.function.is_public = 0;
     }
     | FN IDENTIFIER LPAREN param_list RPAREN LBRACE statement_list RBRACE {
         ASTNode* void_type = create_type_node(AST_TYPE_VOID);
         $$ = create_function_node($2, $4, void_type, $7);
+        $$->data.function.is_public = 0;
     }
     ;
 
@@ -392,12 +418,6 @@ for_statement
         ASTNode* start = $5;
         ASTNode* end = $7;
         $$ = create_for_node_with_yyltype($3, start, end, $9, (YYLTYPE*) &@$);
-    }
-    | FOR LPAREN identifier identifier SEMICOLON expression RPAREN block_statement {
-        ASTNode* start = $3;  
-        ASTNode* var   = $4;
-        ASTNode* end   = $6;
-        $$ = create_for_node_with_yyltype(var, start, end, $8, (YYLTYPE*) &@$);
     }
     | FOR LPAREN identifier SEMICOLON expression RPAREN block_statement {
         ASTNode* var = $3;

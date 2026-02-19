@@ -1621,7 +1621,9 @@ public:
             builder.CreateRet(defaultRetVal);
         }
         scopeManager.setCurrentFunction(prevFunc);
-        
+        builder.ClearInsertionPoint();/*清除插入点，
+        以便后续的顶级代码生成不会继续在刚刚完成的函数的基本块内进行
+         该基本块可能已经包含返回指令 */
         return VisitResult(func, returnValueType);
     }
     

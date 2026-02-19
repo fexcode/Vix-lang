@@ -1,2 +1,5 @@
-import "std/rand.vix"
-print(rand(1,100))
+fn main() ->i32
+{
+    print("Vix 0.0.1 version!")
+    return 0
+}

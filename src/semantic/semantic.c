@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <ctype.h>
 extern const char* current_input_filename;
+static int extract_public_functions_from_module(const char* module_path, SymbolTable* table);
+
 typedef struct VisitedNode {
     ASTNode* node;
     struct VisitedNode* next;
@@ -752,8 +756,39 @@ static int check_undefined_symbols_in_node_with_visited(ASTNode* node, SymbolTab
             break;
         }
         
+        case AST_IMPORT: {
+            const char* module_path = node->data.import.module_path;
+            const char* current_file_dir = current_input_filename ? current_input_filename : ".";
+            char dir_path[1024];
+            strncpy(dir_path, current_file_dir, sizeof(dir_path) - 1);
+            dir_path[sizeof(dir_path) - 1] = '\0';
+            char* last_slash = strrchr(dir_path, '/');
+            if (last_slash) {
+                *(last_slash + 1) = '\0';
+            } else {
+                strcpy(dir_path, "./");
+            }
+            char full_module_path[1024];
+            snprintf(full_module_path, sizeof(full_module_path), "%s%s", dir_path, module_path);
+            if (access(full_module_path, F_OK) == -1)//文件不存在
+            {
+                const char* filename = current_input_filename ? current_input_filename : "unknown";
+                int line = (node->location.first_line > 0) ? node->location.first_line : 1;
+                char error_msg[512];
+                snprintf(error_msg, sizeof(error_msg), "Module file not found: %s", full_module_path);
+                report_semantic_error_with_location(error_msg, filename, line);//报告错误
+                errors_found++;
+            }
+            else 
+            {
+                errors_found += extract_public_functions_from_module(full_module_path, table);
+            }
+            break;
+        }
+        
         case AST_EXPRESSION_LIST: {
-            for (int i = 0; i < node->data.expression_list.expression_count; i++) {
+            for (int i = 0; i < node->data.expression_list.expression_count; i++)
+            {
                 errors_found += check_undefined_symbols_in_node_with_visited(node->data.expression_list.expressions[i], table, new_visited_list);
             }
             break;
@@ -1213,4 +1248,55 @@ int check_unused_variables_with_usage(ASTNode* node, SymbolTable* table, struct 
 
 int check_undefined_symbols_in_node(ASTNode* node, SymbolTable* table) {
     return check_undefined_symbols_in_node_with_visited(node, table, NULL);
+}
+static int extract_public_functions_from_module(const char* module_path, SymbolTable* table) {
+    FILE* file = fopen(module_path, "r");
+    if (!file) {
+        return 0; //无法打开文件
+    }
+    fseek(file, 0, SEEK_END);//文件查看
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    char* buffer = malloc(file_size + 1);
+    if (!buffer) {
+        fclose(file);
+        return 0;
+    }
+    
+    fread(buffer, 1, file_size, file);
+    buffer[file_size] = '\0';
+    fclose(file);
+    
+    int errors_found = 0;
+    char* pos = buffer;
+    while ((pos = strstr(pos, "pub fn")) != NULL) { //跳过pub fn p1 u2 b3 4 f5 n6 6个字符
+        pos += 6;
+        while (*pos && isspace(*pos)) {
+            pos++;
+        }
+        char func_name[256];
+        int i = 0;
+        if ((*pos >= 'a' && *pos <= 'z') || (*pos >= 'A' && *pos <= 'Z') || *pos == '_') {
+            func_name[i++] = *pos++;
+            
+            while ((*pos >= 'a' && *pos <= 'z') || 
+                   (*pos >= 'A' && *pos <= 'Z') || 
+                   (*pos >= '0' && *pos <= '9') || 
+                   *pos == '_') {//查找
+                if (i < (int)(sizeof(func_name) - 1)) {
+                    func_name[i++] = *pos;
+                }
+                pos++;
+            }
+        }
+        
+        if (i > 0) {
+            func_name[i] = '\0';
+            add_symbol(table, func_name, SYMBOL_FUNCTION, TYPE_UNKNOWN);//add fn name to st
+        }
+    }
+    
+    free(buffer);//福瑞
+    return errors_found;
 }

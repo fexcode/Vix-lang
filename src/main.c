@@ -274,6 +274,9 @@ int main(int argc, char **argv) {
     yyin = input_file;
     
     int result = yyparse();
+    if (result == 0 && root) {
+        inline_imports(root);
+    }
     
     if (result == 0) {
         int semantic_errors = check_undefined_symbols(root);

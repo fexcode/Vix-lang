@@ -1,8 +1,4 @@
-extern "C"
-{
-    fn printf(format: ptr, ...) ->i32
-}
-fn strcmp(a:ptr,b:ptr) ->i32
+pub fn strcmp(a:ptr,b:ptr) ->i32
 {
     i = 0
     while(1)

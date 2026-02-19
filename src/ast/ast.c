@@ -6,6 +6,10 @@
 #ifdef HAVE_PARSER_TAB_H//tips : 别删，用来取消警告
 #include "../parser/parser.tab.h"//tips : 这个头文件按编译顺序编译
 #endif
+extern FILE* yyin;
+extern ASTNode* root; //tips : 根节点
+extern const char* current_input_filename;
+extern int yyparse(void);
 
 ASTNode* create_program_node_with_location(Location location) {
     ASTNode* node = malloc(sizeof(ASTNode));
@@ -475,8 +479,25 @@ ASTNode* create_unaryop_node_with_location(UnaryOpType op, ASTNode* expr, Locati
     return node;
 }
 
+ASTNode* create_unaryop_node_with_yyltype(UnaryOpType op, ASTNode* expr, void* yylloc) {
+    YYLTYPE* loc = (YYLTYPE*)yylloc;
+    Location location = {
+        loc->first_line,
+        loc->first_column,
+        loc->last_line,
+        loc->last_column
+    };
+    return create_unaryop_node_with_location(op, expr, location);
+}
+
 ASTNode* create_unaryop_node(UnaryOpType op, ASTNode* expr) {
-    return create_unaryop_node_with_location(op, expr, expr->location);
+    Location loc = {
+        expr->location.first_line,
+        expr->location.first_column,
+        expr->location.last_line,
+        expr->location.last_column
+    };
+    return create_unaryop_node_with_location(op, expr, loc);
 }
 
 ASTNode* create_num_int_node_with_location(long long value, Location location) {
@@ -648,6 +669,7 @@ ASTNode* create_function_node_with_location(const char* name, ASTNode* params, A
     node->data.function.is_extern = 0;
     node->data.function.linkage = NULL;
     node->data.function.vararg = 0;
+    node->data.function.is_public = 0;  // 默认不是公共函数
     return node;
 }
 
@@ -660,6 +682,25 @@ ASTNode* create_function_node(const char* name, ASTNode* params, ASTNode* return
         loc.last_column = body->location.last_column;
     }
     return create_function_node_with_location(name, params, return_type, body, loc);
+}
+
+ASTNode* create_public_function_node(const char* name, ASTNode* params, ASTNode* return_type, ASTNode* body) {
+    Location loc = {0, 0, 0, 0};
+    if (body) {
+        loc.first_line = 0;
+        loc.first_column = 0;
+        loc.last_line = body->location.last_line;
+        loc.last_column = body->location.last_column;
+    }
+    ASTNode* node = create_function_node_with_location(name, params, return_type, body, loc);
+    node->data.function.is_public = 1;//pub
+    return node;
+}
+
+ASTNode* create_public_function_node_with_location(const char* name, ASTNode* params, ASTNode* return_type, ASTNode* body, Location location) {
+    ASTNode* node = create_function_node_with_location(name, params, return_type, body, location);
+    node->data.function.is_public = 1;  //pub函数
+    return node;
 }
 
 ASTNode* create_extern_function_node_with_location(const char* name, ASTNode* params, ASTNode* return_type, const char* linkage, Location location) {
@@ -1073,6 +1114,35 @@ ASTNode* create_global_node_with_yyltype(ASTNode* identifier, ASTNode* type, AST
     return create_global_node_with_location(identifier, type, initializer, location);
 }
 
+ASTNode* create_import_node(const char* module_path) {
+    Location loc = {0, 0, 0, 0};//默认位置
+    return create_import_node_with_location(module_path, loc);
+}
+
+ASTNode* create_import_node_with_location(const char* module_path, Location location) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Failed to allocate memory for ASTNode\n");
+        exit(1);
+    }
+    node->type = AST_IMPORT;
+    node->location = location;
+    node->mutability = MUTABILITY_IMMUTABLE;
+    node->data.import.module_path = strdup(module_path);
+    return node;
+}
+
+ASTNode* create_import_node_with_yyltype(const char* module_path, void* yylloc) {
+    YYLTYPE* loc = (YYLTYPE*)yylloc;
+    Location location = {
+        loc->first_line,
+        loc->first_column,
+        loc->last_line,
+        loc->last_column
+    };
+    return create_import_node_with_location(module_path, location);
+}
+
 ASTNode* create_char_node(char value) {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
@@ -1192,7 +1262,9 @@ void free_ast(ASTNode* node) {
                 free_ast(node->data.if_stmt.else_body);
             }
             break;
-            
+        case AST_IMPORT:
+            free(node->data.import.module_path);
+            break;
         case AST_WHILE:
             free_ast(node->data.while_stmt.condition);
             free_ast(node->data.while_stmt.body);
@@ -1308,6 +1380,9 @@ void print_ast(ASTNode* node, int indent) {
                 print_ast(node->data.if_stmt.else_body, indent + 1);
             }
             break;
+        case AST_IMPORT:
+            printf("Import: %s\n", node->data.import.module_path);
+            break;
         case AST_WHILE:
             printf("While:\n");
             print_ast(node->data.while_stmt.condition, indent + 1);
@@ -1363,9 +1438,18 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->data.binop.right, indent + 1);
             break;
         case AST_UNARYOP:
-            printf("Unary Operation (%s):\n", 
-                   node->data.unaryop.op == OP_MINUS ? "-" : "+");
-            print_ast(node->data.unaryop.expr, indent + 1);
+            {
+                const char* op_str;
+                switch (node->data.unaryop.op) {
+                    case OP_MINUS:   op_str = "-"; break;
+                    case OP_PLUS:    op_str = "+"; break;
+                    case OP_ADDRESS: op_str = "&"; break;
+                    case OP_DEREF:   op_str = "@"; break;
+                    default:         op_str = "?"; break;
+                }
+                printf("Unary Operation (%s):\n", op_str);
+                print_ast(node->data.unaryop.expr, indent + 1);
+            }
             break;
         case AST_NUM_INT:
             printf("Integer: %lld\n", node->data.num_int.value);
@@ -1471,7 +1555,11 @@ void print_ast(ASTNode* node, int indent) {
                 if (node->data.function.vararg) printf(" [vararg]");
                 printf("\n");
             } else {
-                printf("Function: %s\n", node->data.function.name);
+                if (node->data.function.is_public) {
+                    printf("Public Function: %s\n", node->data.function.name);
+                } else {
+                    printf("Function: %s\n", node->data.function.name);
+                }
             }
             for (int i = 0; i < indent + 1; i++) printf("  ");
             printf("Params:\n");
@@ -1525,18 +1613,126 @@ void print_ast(ASTNode* node, int indent) {
             break;
     }
 }
+static void inline_imports_in_node(ASTNode* node) {
+    if (!node) return;
+
+    if (node->type == AST_PROGRAM) {
+        int i = 0;
+        while (i < node->data.program.statement_count) {
+            ASTNode* stmt = node->data.program.statements[i];
+            if (!stmt) { i++; continue; }
+
+            if (stmt->type == AST_IMPORT) {
+                const char* module_path = stmt->data.import.module_path;
+                const char* current = current_input_filename ? current_input_filename : ".";
+                char dir_path[1024];
+                strncpy(dir_path, current, sizeof(dir_path) - 1);
+                dir_path[sizeof(dir_path) - 1] = '\0';
+                char* last_slash = strrchr(dir_path, '/');
+                if (last_slash) {
+                    *(last_slash + 1) = '\0';
+                } else {
+                    strcpy(dir_path, "./");
+                }
+
+                char full_module_path[1024];
+                snprintf(full_module_path, sizeof(full_module_path), "%s%s", dir_path, module_path);
+
+                FILE* f = fopen(full_module_path, "r");
+                if (!f) {
+                    i++;
+                    continue;
+                }
+
+                FILE* old_yyin = yyin;
+                ASTNode* old_root = root;
+                const char* old_current = current_input_filename;
+
+                yyin = f;
+                current_input_filename = full_module_path;
+                root = NULL;
+                yyparse();
+                fclose(f);
+
+                ASTNode* module_root = root;
+                yyin = old_yyin;//存储旧值
+                root = old_root;
+                current_input_filename = old_current;
+
+                if (!module_root || module_root->type != AST_PROGRAM) {
+                    if (module_root) free_ast(module_root);
+                    i++;
+                    continue;
+                }
+                int pub_count = 0;//计数
+                for (int j = 0; j < module_root->data.program.statement_count; j++) {
+                    ASTNode* s = module_root->data.program.statements[j];
+                    if (s && s->type == AST_FUNCTION && s->data.function.is_public) pub_count++;
+                }
+
+                if (pub_count == 0) {
+                    free_ast(module_root);
+                    i++;
+                    continue;
+                }
+
+                int old_count = node->data.program.statement_count;
+                int new_count = old_count - 1 + pub_count; //rm import add pub_count
+                ASTNode** new_statements = malloc(sizeof(ASTNode*) * new_count);
+                int idx = 0;
+                for (int k = 0; k < i; k++) new_statements[idx++] = node->data.program.statements[k];//复制
+                for (int j = 0; j < module_root->data.program.statement_count; j++) {
+                    ASTNode* s = module_root->data.program.statements[j];
+                    if (s && s->type == AST_FUNCTION && s->data.function.is_public) {
+                        new_statements[idx++] = s;
+                        module_root->data.program.statements[j] = NULL;//no double free
+                    }
+                }
+                for (int k = i + 1; k < old_count; k++) new_statements[idx++] = node->data.program.statements[k];//复制语句
+                free(node->data.program.statements);
+                node->data.program.statements = new_statements;
+                node->data.program.statement_count = new_count;
+                free_ast(stmt);
+                int remaining = 0;
+                for (int j = 0; j < module_root->data.program.statement_count; j++) if (module_root->data.program.statements[j]) remaining++;
+                ASTNode** rem = NULL;
+                if (remaining > 0) {
+                    rem = malloc(sizeof(ASTNode*) * remaining);
+                    int r = 0;
+                    for (int j = 0; j < module_root->data.program.statement_count; j++) {
+                        if (module_root->data.program.statements[j]) rem[r++] = module_root->data.program.statements[j];
+                    }
+                }
+                free(module_root->data.program.statements);
+                module_root->data.program.statements = rem;
+                module_root->data.program.statement_count = remaining;
+                free_ast(module_root);
+                i += pub_count; //next
+            } else {
+                inline_imports_in_node(stmt);
+                i++;
+            }
+        }
+        return;
+    }
+
+    if (node->type == AST_FUNCTION) {
+        if (node->data.function.body) inline_imports_in_node(node->data.function.body);
+        return;
+    }
+}
+
+void inline_imports(ASTNode* node) {
+    inline_imports_in_node(node);
+}
 
 int get_array_length(ASTNode* node) {
     if (!node || node->type != AST_EXPRESSION_LIST) {
         return -1;
     }
-    
-    // 如果已经预计算过，直接返回
     if (node->data.expression_list.precomputed_length >= 0) {
         return node->data.expression_list.precomputed_length;
     }
-    
-    // 首次计算并缓存
     node->data.expression_list.precomputed_length = node->data.expression_list.expression_count;
     return node->data.expression_list.precomputed_length;
 }
