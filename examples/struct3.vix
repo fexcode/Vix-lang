@@ -1,11 +1,15 @@
-struct Person{
+struct  Person {
     name: string,
     age: i32
 }
-struct Woman{
+struct  Woman {
     person: Person
     age: i32
 }
-p1 = Person{name:"Mike",age:20}
-emp = Woman{person:p1,age:30}
+p1 =  Person {
+    name: "Mike", age: 20
+}
+emp =  Woman {
+    person: p1, age: 30
+}
 print(emp.person.name)

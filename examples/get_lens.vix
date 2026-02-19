@@ -1,11 +1,9 @@
-fn get_lens(arr:[i32]) -> i32
-{
-    return arr.length
+fn get_lens(arr: [i32]) ->  i32 {
+    return  arr.length
 }
-fn main() ->i32
-{
+fn main() ->  i32 {
     arr = [5, 2, 8, 1, 9, 10]
-    len = get_lens(arr)
+    len =  get_lens(arr)
     print(len)
-    return 0
+    return  0
 }

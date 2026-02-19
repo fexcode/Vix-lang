@@ -1,16 +1,13 @@
-fn arr_loop(arr:[i32],len:i32)
-{
-    for(i in 0 .. len)
-    {
+fn arr_loop(arr: [i32], len: i32) {
+    for (i in  0 ..  len) {
         print(arr[i])
     }
 }
-fn main() ->i32
-{
+fn main() ->  i32 {
     arr = [5, 2, 8, 1, 9, 10]
-    arr_loop(arr,arr.length)
+    arr_loop(arr, arr.length)
     print(arr.length)
-    return 0
+    return  0
 }
 /*
 tips:

@@ -1,19 +1,19 @@
-a = ["Hello","world"]
-a.add!(2,"!")
+a = ["Hello", "world"]
+a.add ! (2, "!")
 print(a)
-b = a.pop()
+b =  a.pop()
 print(b)
-c = a.push("vix")
+c =  a.push("vix")
 print(c)
-a = [1,2,3]
-print(a)    //[1,2,3]
-a.add!(0,4)  //索引，值/原地添加
-print(a)    //[4,1,2,3]
-b = a.remove(0) //[1,2,3]/移除指定索引的元素并返回该元素赋值给 b 
-print(b)   //b = [1,2,3]
-a.push!(5)       //a = [4,1,2,3,5]在末尾添加
-c = a.pop()      //c = 5 /弹出末尾元素并返回
+a = [1, 2, 3]
+print(a) //[1,2,3]
+a.add ! (0, 4) //索引，值/原地添加
+print(a) //[4,1,2,3]
+b =  a.remove(0) //[1,2,3]/移除指定索引的元素并返回该元素赋值给 b
+print(b) //b = [1,2,3]
+a.push ! (5) //a = [4,1,2,3,5]在末尾添加
+c =  a.pop() //c = 5 /弹出末尾元素并返回
 print(a)
-a.replace!(1, 6)  //a = [4,6,2,3,5] 替换指定位置
+a.replace ! (1, 6) //a = [4,6,2,3,5] 替换指定位置
 print(c)
 print(a)

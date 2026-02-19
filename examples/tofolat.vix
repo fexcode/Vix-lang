@@ -1,2 +1,2 @@
-b=tofloat(input(">"))
-print(b+3.14)
+b =  tofloat(input(">"))
+print(b + 3.14)

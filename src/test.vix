@@ -1,18 +1,22 @@
-global seed = 12345
-fn rand(mini:i32,max:i32) ->i32
-{
+<  <  <  <  <  <  <  Updated upstream
+global  seed = 12345
+fn rand(mini: i32, max: i32) ->  i32 {
     seed = (seed * 9301 + 49297) % 233280
     if (seed < 0) {
-        seed = -seed
+        seed =  -  seed
     }
-    return mini + (seed % (max - mini + 1))
+    return  mini + (seed % (max -  mini + 1))
 }
-fn main() ->i32
-{
+fn main() ->  i32 {
     n = 0
-    for(i in 0 .. 10)
-    {
-        n = rand(1, 100)
+    for (i in  0 .. 10) {
+        n =  rand(1, 100)
         print(n)
     }
 }
+==  ==  ==  =
+fn main() ->  i32 {
+    print("Vix 0.0.1 version!")
+    return  0
+}
+>  >  >  >  >  >  >  Stashed changes

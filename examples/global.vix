@@ -1,7 +1,6 @@
-global counter = 42
-global message: str = "Hello World"
-global pi: f64 = 3.14159
-
+global  counter = 42
+global  message: str = "Hello World"
+global  pi: f64 = 3.14159
 print(counter)
 print(message)
 print(pi)

@@ -1,8 +1,6 @@
-fn main() 
-{
-    p: &i32 = nil
-    if (p == nil) 
-    {
+fn main() {
+    p:  & i32 =  nil
+    if (p ==  nil) {
         print("nil is working...")
     }
 }

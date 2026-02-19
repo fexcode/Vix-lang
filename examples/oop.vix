@@ -1,26 +1,20 @@
-obj PersonA(age:i32,name:string)
-{
-    field age = age
-    field name = name
-    hello(self)
-    {
-        print("ciallo ! my name is " + self.name)
+obj  PersonA(age: i32, name: string) {
+    field  age =  age
+    field  name =  name
+    hello(self) {
+        print("ciallo ! my name is " +  self.name)
     }
-    out_age(self)
-    {
-        print("I am " + self.age + " years old")
+    out_age(self) {
+        print("I am " +  self.age + " years old")
     }
-
 }
-impl PersonA -> public
-{
-    hello as greeting,
-    out_age as age
+impl  PersonA -> public  {
+    hello as  greeting,
+    out_age as  age
 }
-fn main() ->i32
-{
-    obj p = PersonA(20,"john")
+fn main() ->  i32 {
+    obj  p =  PersonA(20, "john")
     p.greeting()
     p.age()
-    return 0
+    return  0
 }

@@ -1,13 +1,16 @@
 //1. 取地址：&
 x = 10
-mut ptr = &x//获取 x 的地址 赋值需要加上mut修饰符
-
+mut  ptr = & x //获取 x 的地址 赋值需要加上mut修饰符
 //2. 解引用：@
-value = @ptr//获取 ptr 指向的值
-@ptr = 20//修改 ptr 指向的值
-
+<  <  <  <  <  <  <  Updated upstream
+value = @ ptr //获取 ptr 指向的值
+@ ptr = 20 //修改 ptr 指向的值
 //3. 指针运算：+ -(仅用于数组)
+==  ==  ==  =
+value = @ ptr //获取 ptr 指向的值
+@ ptr = 20 //修改 ptr 指向的值
+>  >  >  >  >  >  >  Stashed changes
 arr = [1, 2, 3, 4, 5]
-p = &arr[0]
-second = @(p + 1)//获取 arr[1] = 2
+p = & arr[0]
+second = @(p + 1) //获取 arr[1] = 2
 print(second)

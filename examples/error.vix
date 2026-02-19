@@ -1,10 +1,9 @@
-maybe
-{
-    error."No Found" {
+maybe  {
+    error ."No Found" {
         code: 404
         message: "The requested resource was not found."
     }
 }
-catch error."No Found" as e {
-    print("Error " + e.code + ": " + e.message)
+catch  error ."No Found" as  e {
+    print("Error " +  e.code + ": " +  e.message)
 }

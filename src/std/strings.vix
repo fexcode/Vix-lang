@@ -1,0 +1,14 @@
+pub  fn strcmp(a: ptr, b: ptr) ->  i32 {
+    i = 0
+    while (1) {
+        ca =  a[i]
+        cb =  b[i]
+        if (ca !=  cb) {
+            return  ca -  cb
+        }
+        if (ca == 0) {
+            return  0
+        }
+        i =  i + 1
+    }
+}

@@ -1,11 +1,12 @@
-struct Person {
+struct  Person {
     name: string,
     age: i32
 }
-fn main()
-{
-    p : Person{name:"John", age: 20}
-    print(p.height)//error in this line
-    print(p.nema)//error:did you mean is name?
-    return 0;
+fn main() {
+    p: Person {
+        name: "John", age: 20
+    }
+    print(p.height) //error in this line
+    print(p.nema) //error:did you mean is name?
+    return  0;
 }

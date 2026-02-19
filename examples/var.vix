@@ -1,6 +1,6 @@
-a="Hello"
-b=123
-c=3.14
+a = "Hello"
+b = 123
+c = 3.14
 print(a)
 print(b)
 print(c)

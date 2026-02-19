@@ -1,2 +1,2 @@
-a=toint(input(">"))
-print(a+1)
+a =  toint(input(">"))
+print(a + 1)

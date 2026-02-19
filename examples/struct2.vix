@@ -1,16 +1,22 @@
-struct Person {
+struct  Person {
     name: string,
     age: i32,
     height: f64
 }
-struct Book {
+struct  Book {
     title: string,
     author: string,
     year: i32
 }
-p1: Person{name: "Alice", age: 25, height: 5.7}
-p2: Person{name: "Bob", age: 30, height: 6.0}
-book1: Book{title: "How to coding", author: "Vix Dev Team", year: 2026}
+p1: Person {
+    name: "Alice", age: 25, height: 5.7
+}
+p2: Person {
+    name: "Bob", age: 30, height: 6.0
+}
+book1: Book {
+    title: "How to coding", author: "Vix Dev Team", year: 2026
+}
 print("Person 1 Name: ", p1.name)
 print("Person 1 Age: ", p1.age)
 print("Person 1 Height: ", p1.height)
@@ -22,19 +28,25 @@ print("Book Author: ", book1.author)
 print("Book Year: ", book1.year)
 p1.age = 26
 print("Update p1 age: ", p1.age);
-age_diff: p2.age - p1.age;
+age_diff: p2.age -  p1.age;
 print("Age difference: ", age_diff);
-struct juxing {
+struct  juxing {
     width: f64,
     height: f64
 }
-rect: juxing{width: 10.5, height: 8.2};
-area: rect.width * rect.height;
+rect: juxing {
+    width: 10.5, height: 8.2
+}
+;
+area: rect.width *  rect.height;
 print("juxing area: ", area);
-struct Address {
+struct  Address {
     street: string,
     city: string,
     zip: string
 }
-addr: Address{street: "123 Main St", city: "Anytown", zip: "12345"};
+addr: Address {
+    street: "123 Main St", city: "Anytown", zip: "12345"
+}
+;
 print("Address: ", addr.street, ", ", addr.city, ", ", addr.zip);

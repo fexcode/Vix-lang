@@ -1,0 +1,10 @@
+global  codeseed = 12345
+pub  fn rand(mini: i32, max: i32) ->  i32 // tips:由左值决定返回值大小，如下文的n是i32，所以返回值也是i32
+{
+    codeseed = (codeseed * 9301 + 49297) % 233280
+    if (codeseed < 0) {
+        codeseed =  -  codeseed
+    }
+    return  mini + (codeseed % (max -  mini + 1))
+}
+//共有函数
