@@ -1,6 +1,10 @@
-global seed = 12345
+extern "C"
+{
+    fn time() -> i64
+}
 pub fn rand(mini:i32,max:i32) ->i32 //tips:由左值决定返回值大小，如下文的n是i32，所以返回值也是i32
 {
+    seed = time()
     seed = (seed * 9301 + 49297) % 233280
     if (seed < 0) {
         seed = -seed
